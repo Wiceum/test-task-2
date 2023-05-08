@@ -29,8 +29,7 @@ class MealList extends Command
     public function handle(MealListService $service)
     {
         $ingredientList = $this->argument('ingredientList');
-        $result = $service->validateInput($ingredientList)
-            ->compose();
+        $result = $service->compose($ingredientList);
         $this->line($result);
         return Command::SUCCESS;
     }

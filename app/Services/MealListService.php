@@ -2,36 +2,64 @@
 
 namespace App\Services;
 
+use App\Exceptions\BusinessException;
+use App\Models\Ingredient;
+use App\Models\IngredientType;
+use Illuminate\Support\Collection;
+
 final class MealListService
 {
     protected string $input;
     protected $result = '';
-    protected array $inputTypes = [];
-    protected $ingredients;
+    protected Collection $ingredientTypes;
+    protected Collection $ingredients;
 
     public function __construct(string $input = '')
     {
         $this->input = $input;
     }
 
-    public function compose()
+    public function compose(string $input)
     {
-        $this->checkIngredientsType();
-        return $this->result;
+        $this->input = $input;
+        try {
+            $this->validateInput()
+                ->getIngredients()
+                ->checkIngredientTypes()
+                ->calculate();
+            return json_encode($this->result);
+        } catch (BusinessException $e) {
+            return $e->getUserMessage();
+        }
     }
 
-    public function validateInput(string $input)
+    private function validateInput()
     {
-
-        if (!preg_match('/^[a-z]*$/', $input)) {
-            $this->result = 'Error! Wrong input.';
+        if (!preg_match('/^[a-z]*$/', $this->input)) {
+            throw new BusinessException('Error! Wrong input.');
         }
-        $this->input = $input;
         return $this;
     }
 
-    private function checkIngredientsType()
+    private function getIngredients()
     {
-        return true;
+        $this->ingredientTypes = IngredientType::all();
+        $this->ingredients = Ingredient::all();
+        return $this;
+    }
+
+    private function checkIngredientTypes()
+    {
+        $inputTypes = collect(str_split($this->input));
+        $intersected = $inputTypes->intersect($this->ingredientTypes);
+        if ($intersected->isNotEmpty()) {
+            throw new BusinessException('No such ingredient type!');
+        }
+        return $this;
+    }
+
+    private function calculate()
+    {
+
     }
 }
