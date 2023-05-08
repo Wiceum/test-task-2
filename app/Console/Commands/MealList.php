@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\MealListService;
 use Illuminate\Console\Command;
 
 class MealList extends Command
@@ -25,10 +26,12 @@ class MealList extends Command
      *
      * @return int
      */
-    public function handle()
+    public function handle(MealListService $service)
     {
         $ingredientList = $this->argument('ingredientList');
-        $this->line($ingredientList);
+        $result = $service->validateInput($ingredientList)
+            ->compose();
+        $this->line($result);
         return Command::SUCCESS;
     }
 }
