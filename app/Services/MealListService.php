@@ -28,7 +28,8 @@ final class MealListService
                 ->getIngredients()
                 ->checkIngredientTypes()
                 ->calculate();
-            return json_encode($this->result, JSON_UNESCAPED_UNICODE);
+            $json = json_encode($this->result, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
+            return $json;
         } catch (BusinessException $e) {
             return $e->getUserMessage();
         }
@@ -69,6 +70,10 @@ final class MealListService
     private function calculate()
     {
         $inputTypes = collect(str_split($this->input));
+        if ($inputTypes->count() === 1) {
+            $this->result = $this->ingredients->where('code','=', $inputTypes->first());
+            return;
+        }
 
         //создаем набор из разных комбинаций блюд, включая с одинаковыми ингредиентами
         $combinations = collect(
